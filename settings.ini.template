@@ -1,0 +1,14 @@
+[deepseek]
+API_KEY = <input_your_key>
+BASE_URL = https://api.deepseek.com
+
+[memory]
+# 每一组处理的临时记忆条数，也是直接联想的上下文条数，数字越大上下文直接联想越多，但会使prompt过长，建议不要太大
+TEMP_GROUP_SIZE=20 
+# 每一组处理的中期记忆条数（建议不要太大，否则记忆归档不及时）
+MID_GROUP_SIZE=5
+
+[task]
+#BOT等待用户回复的时间（秒）
+WAIT_TIME=5
+

@@ -1,0 +1,3 @@
+openai==1.65.5
+watchdog==6.0.0
+pytz==2025.1
