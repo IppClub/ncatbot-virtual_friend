@@ -1,5 +1,4 @@
-from .user_state import USER_CHARACTERS,USER_INPUTS, USER_TASKS
-from ..ai_utils.ai_helper import ai_message
+from .user_state import USER_CHARACTERS,USER_INPUTS, USER_TASKS, USER_IMGS
 from .task_manager import schedule_task
 from ..config.config_loader import get_character ,get_all_characters_names
 from ..memory.user_manager import get_user_character, insert_user_character, modify_user_character,upsert_user_character
@@ -79,11 +78,21 @@ async def handle_private_message(msg, api):
         await api.post_private_msg(user_id, "请先设置角色喵~（输入：切换角色 角色名）")
         return 
     
-    # 处理用户输入
-    if user_id in USER_INPUTS:
-        USER_INPUTS[user_id] += " " + msg.raw_message
-    else:
-        USER_INPUTS[user_id] = msg.raw_message
+    # 处理用户输入（直接解析原始message）
+    for content in msg.message:
+        # 文本输入
+        if content["type"] == "text":
+            if user_id in USER_INPUTS:
+                USER_INPUTS[user_id] += " " + content["data"]["text"]
+            else:
+                USER_INPUTS[user_id] = content["data"]["text"]
+        # 图片输入
+        elif content["type"] == "image":
+            if user_id in USER_IMGS:
+                USER_IMGS[user_id].append(content["data"]["url"])
+            else:
+                USER_IMGS[user_id] = [content["data"]["url"]]
+
 
     # 取消旧任务，启动新任务
     await schedule_task(user_id, api, cur_character)
