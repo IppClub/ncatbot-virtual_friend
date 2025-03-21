@@ -182,15 +182,15 @@ def insert_long_memory(user_id, content):
     conn.close()
     logger.info("插入一条长期数据完成")
 
-# 获取全部临时记忆（拼接格式）
+# 获取全部临时记忆（拼接格式）（返回加上时间）
 def get_temp_memory_string(user_id):
     logger.info(f"正在获取用户 {user_id} 的拼接临时记忆...")
     """ 获取用户的临时记忆 """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT content, role FROM temp_memory WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT content, role, timestamp FROM temp_memory WHERE user_id = ?", (user_id,))
     
-    memories = [{"content": row[0], "role": row[1]} for row in cursor.fetchall()]
+    memories = [{"content": row[0], "role": row[1],"timestamp": row[2]} for row in cursor.fetchall()]
     conn.close()
 
     # 如果没有临时记忆，返回空字符串
@@ -202,9 +202,9 @@ def get_temp_memory_string(user_id):
     formatted_content = ""
     for entry in memories:
         if entry["role"] == "bot":
-            formatted_content += f"you: {entry['content']}，"
+            formatted_content += f"you: {entry['content']}，time:{entry['timestamp']}"
         else:
-            formatted_content += f"user: {entry['content']}，"
+            formatted_content += f"user: {entry['content']}，time:{entry['timestamp']}"
     
     logger.info(f"拼接临时记忆内容：{formatted_content}")
     return formatted_content.strip("，")  # 去掉最后的逗号
