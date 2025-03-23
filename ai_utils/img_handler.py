@@ -27,7 +27,7 @@ async def read_img(image_urls: list) -> str:
         {
             "role": "user",
             "content": [
-                {"type": "text", "text": "图片主要讲了什么?"},
+                {"type": "text", "text": "详细说明这些图片中的内容"},
             ] + [{"type": "image_url", "image_url": {"url": url}} for url in image_urls]
         }
     ]
