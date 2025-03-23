@@ -20,7 +20,7 @@ API_KEY = config.get("doubao", "API_KEY", fallback=DEFAULT_API_KEY)
 BASE_URL = config.get("doubao", "BASE_URL", fallback=DEFAULT_BASE_URL)
 
 # 如果配置为默认值，则不启用识图功能
-if API_KEY == DEFAULT_API_KEY or BASE_URL == DEFAULT_BASE_URL:
+if API_KEY == DEFAULT_API_KEY :
     client = None
 else:
     client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)  # 只创建一个客户端
