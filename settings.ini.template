@@ -2,6 +2,10 @@
 API_KEY = <input_your_key>
 BASE_URL = https://api.deepseek.com
 
+[doubao]
+API_KEY = <input_your_key>
+BASE_URL = https://ark.cn-beijing.volces.com/api/v3
+
 [memory]
 # 每一组处理的临时记忆条数，也是直接联想的上下文条数，数字越大上下文直接联想越多，但会使prompt过长，建议不要太大
 TEMP_GROUP_SIZE=20 
