@@ -16,3 +16,6 @@ MID_GROUP_SIZE=5
 #BOT等待用户回复的时间（秒）
 WAIT_TIME=5
 
+[host]
+# 主用户id
+USER_ID = <input_your_qq_id>

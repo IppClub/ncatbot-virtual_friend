@@ -30,6 +30,7 @@
 
 - 支持向机器人发送图片，机器人将会识别图中内容进行回复
 - 识图部分使用豆包的api
+- 如果保持豆包部分api配置不变，即为不开启识图功能，其余部分可以正常使用
 
 ## 插件安装
 
@@ -66,12 +67,22 @@
    API_KEY = <input_your_key>
    ```
 
+   修改其中的`USER_ID`为你的主用户QQ号：
+
+   ```ini
+   USER_ID = <input_your_qq_id>
+   ```
+
    其余参数可根据注释说明自行调整。
 
    ```ini
    [deepseek]
    API_KEY = <input_your_key>
    BASE_URL = https://api.deepseek.com
+
+   [doubao]
+   API_KEY = <input_your_key>
+   BASE_URL = https://ark.cn-beijing.volces.com/api/v3
 
    [memory]
    # 每一组处理的临时记忆条数，也是直接联想的上下文条数，数字越大上下文直接联想越多，但会使prompt过长，建议不要太大
@@ -82,6 +93,10 @@
    [task]
    #BOT等待用户回复的时间（秒）
    WAIT_TIME=5
+
+   [host]
+   # 主用户id
+   USER_ID = <input_your_qq_id>
 
    ```
 

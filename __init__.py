@@ -1,4 +1,4 @@
 # __init__.py
-from .main import MyPlugin
+from .main import virtual_friend
 
-__all__ = ["MyPlugin"]
+__all__ = ["virtual_friend"]

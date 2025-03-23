@@ -24,9 +24,9 @@ logging.basicConfig(
 # **定义 logger 变量**
 logger = logging.getLogger(__name__)
 
-class MyPlugin(BasePlugin):
+class virtual_friend(BasePlugin):
     name = "virtual_friend"  # 插件名称
-    version = "0.0.1"  # 插件版本
+    version = "0.0.2"  # 插件版本
 
     @bot.group_event() # 暂时不考虑开发群聊功能
     async def on_group_event(self, msg: GroupMessage):
