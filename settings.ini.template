@@ -19,3 +19,13 @@ WAIT_TIME=5
 [host]
 # 主用户id
 USER_ID = <input_your_qq_id>
+
+[active-send]
+# 最长回复间隔（秒）
+max_reply_interval = 120 
+# 最短回复间隔（秒） 
+min_reply_interval = 60  
+# 静默时间段开始（小时:分钟）
+silent_start = 1:00      
+# 静默时间段结束（小时:分钟）
+silent_end = 06:00     

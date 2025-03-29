@@ -3,3 +3,4 @@ __pycache__/
 .log
 settings.ini
 memory/memory.db
+**/log/
