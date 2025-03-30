@@ -10,6 +10,7 @@ from ncatbot.plugin import BasePlugin, CompatibleEnrollment
 from ncatbot.core.message import GroupMessage, PrivateMessage
 from .handlers.private_handler import handle_private_message
 from .memory.memory_manager import init_db
+from .ai_utils.ai_helper import decide_reply_interval
 
 # 用于单元测试引入
 from .ai_utils.img_handler import read_img
@@ -104,6 +105,10 @@ class virtual_friend(BasePlugin):
         silent_start_hour, silent_start_minute = map(int, silent_start.split(":"))
         silent_end_hour, silent_end_minute = map(int, silent_end.split(":"))
 
+        # 防止用户最长和最短时间间隔填反，自动修正
+        if max_reply_interval < min_reply_interval:
+            max_reply_interval, min_reply_interval = min_reply_interval, max_reply_interval
+
         """开始发送消息的死循环"""
         while True:
             current_time = datetime.datetime.now()
@@ -113,13 +118,13 @@ class virtual_friend(BasePlugin):
             # 检查是否在静默时间段内
             if self.is_in_silent_period(current_hour, current_minute, silent_start_hour, silent_start_minute, 
                                         silent_end_hour, silent_end_minute):
-                reply_interval = random.randint(min_reply_interval, max_reply_interval)
+                reply_interval = await decide_reply_interval(user_id,max_reply_interval,min_reply_interval)
                 logger.info(f"当前在静默时间段，不发送消息，将在{reply_interval}秒后再次尝试")
                 await asyncio.sleep(reply_interval)
 
             else:
                 # 随机生成回复间隔
-                reply_interval = random.randint(min_reply_interval, max_reply_interval)
+                reply_interval =await decide_reply_interval(user_id,max_reply_interval,min_reply_interval)
                 logger.info(f"将在 {reply_interval} 秒后发送消息")
                 
                 # 等待一段时间
