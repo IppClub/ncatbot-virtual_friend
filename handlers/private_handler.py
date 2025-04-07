@@ -1,4 +1,4 @@
-from .user_state import USER_CHARACTERS,USER_INPUTS, USER_TASKS, USER_IMGS
+from .user_state import USER_CHARACTERS,USER_INPUTS, USER_TASKS, USER_IMGS,USER_DATA_LOCK
 from .task_manager import schedule_task
 from ..config.config_loader import get_character ,get_all_characters_names
 from ..memory.user_manager import get_user_character, insert_user_character, modify_user_character,upsert_user_character
@@ -79,19 +79,20 @@ async def handle_private_message(msg, api):
         return 
     
     # 处理用户输入（直接解析原始message）
-    for content in msg.message:
-        # 文本输入
-        if content["type"] == "text":
-            if user_id in USER_INPUTS:
-                USER_INPUTS[user_id] += " " + content["data"]["text"]
-            else:
-                USER_INPUTS[user_id] = content["data"]["text"]
-        # 图片输入
-        elif content["type"] == "image":
-            if user_id in USER_IMGS:
-                USER_IMGS[user_id].append(content["data"]["url"])
-            else:
-                USER_IMGS[user_id] = [content["data"]["url"]]
+    async with USER_DATA_LOCK:
+        for content in msg.message:
+            # 文本输入
+            if content["type"] == "text":
+                if user_id in USER_INPUTS:
+                    USER_INPUTS[user_id] += " " + content["data"]["text"]
+                else:
+                    USER_INPUTS[user_id] = content["data"]["text"]
+            # 图片输入
+            elif content["type"] == "image":
+                if user_id in USER_IMGS:
+                    USER_IMGS[user_id].append(content["data"]["url"])
+                else:
+                    USER_IMGS[user_id] = [content["data"]["url"]]
 
 
     # 取消旧任务，启动新任务
