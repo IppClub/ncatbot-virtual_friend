@@ -4,6 +4,7 @@ import asyncio
 import configparser 
 from datetime import datetime, timedelta
 from ..ai_utils.check_memory import check_temp_memory, check_mid_memory, check_long_memory  # 调用你的记忆函数
+from ..RAG_memory.main import query_memory
 
 import logging
 
@@ -78,22 +79,19 @@ async def manage_temp_memory(user_id):
 
     else:
         logger.info(f"短期记忆条数为：{str(temp_count)},需要处理")
-        # 将短期记忆按 "bot:内容，用户：内容" 格式整理
-        temp_memory_last=get_temp_memory_last(user_id)
-        formatted_content = ""
-        for entry in temp_memory_last:
-            if entry["role"] == "bot":
-                formatted_content += f"bot: {entry['content']}，"
-            else:
-                formatted_content += f"user: {entry['content']}，"
+        # 获取短期记忆拼接格式
+        temp_memory_last=get_temp_memory_string(user_id)
         
         # 使用 check_temp_memory 来总结这些短期记忆
-        summary = await check_mid_memory(user_id, formatted_content)
+        summary = await check_mid_memory(user_id, temp_memory_last)
 
         logger.info( f"总结结果为：{summary}" )            
         if summary != "无重要内容":
             # 存入中期记忆
             insert_mid_memory(user_id, summary)
+        
+        # 存入向量数据库
+        await query_memory(temp_memory_last, user_id)
 
         # 清空短期记忆
         clear_temp_memory(user_id)
@@ -202,9 +200,9 @@ def get_temp_memory_string(user_id):
     formatted_content = ""
     for entry in memories:
         if entry["role"] == "bot":
-            formatted_content += f"you: {entry['content']}，time:{entry['timestamp']}"
+            formatted_content += f"bot: {entry['content']}，time:{entry['timestamp']};"
         else:
-            formatted_content += f"user: {entry['content']}，time:{entry['timestamp']}"
+            formatted_content += f"user: {entry['content']}，time:{entry['timestamp']};"
     
     logger.info(f"拼接临时记忆内容：{formatted_content}")
     return formatted_content.strip("，")  # 去掉最后的逗号
