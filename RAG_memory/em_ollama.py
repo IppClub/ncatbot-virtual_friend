@@ -13,7 +13,7 @@ class OllamaClient:
             response = self.session.get(f'{self.base_url}/api/tags')
             response.raise_for_status()
             models = response.json().get("models", [])
-            return any(model['name'] == model_name for model in models)
+            return any(model['name'] == model_name or model['name'] == model_name + ":latest"for model in models)
         except Exception as e:
             print(f"[模型检查失败] {e}")
             return False
