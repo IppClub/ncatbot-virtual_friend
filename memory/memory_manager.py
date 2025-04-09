@@ -4,7 +4,7 @@ import asyncio
 import configparser 
 from datetime import datetime, timedelta
 from ..ai_utils.check_memory import check_temp_memory, check_mid_memory, check_long_memory  # 调用你的记忆函数
-from ..RAG_memory.main import query_memory
+from ..RAG_memory.main import store_memory
 
 import logging
 
@@ -91,7 +91,7 @@ async def manage_temp_memory(user_id):
             insert_mid_memory(user_id, summary)
         
         # 存入向量数据库
-        await query_memory(temp_memory_last, user_id)
+        await store_memory(temp_memory_last, user_id)
 
         # 清空短期记忆
         clear_temp_memory(user_id)
