@@ -3,6 +3,7 @@ import os
 from .em_ollama import ollama_client
 from .qdrant import store_vector_in_qdrant,query_vector_in_qdrant,query_all_vectors_for_user,update_vector_in_qdrant,delete_all_vectors_for_user
 from ..ai_utils.ai_helper import use_ai_raw,use_ai_output_json
+from .prompt import CUSTOM_DUAL_FACT_PROMPT,QUERY_PROMPT
 
 from datetime import datetime
 
@@ -14,54 +15,6 @@ config.read(CONFIG_FILE_PATH,encoding="utf-8")
 
 OPEN = config.get("RAG_memory", "OPEN")
 SIMILARITY_THRESHOLD = config.getfloat("RAG_memory", "SIMILARITY_THRESHOLD")
-
-CUSTOM_DUAL_FACT_PROMPT = f"""
-# 角色定义
-您是多角色对话分析专家，需要同时提取对话双方的事实信息，并自动将时间描述转换为ISO 8601格式日期。
-注意不要遗漏任何时间相关描述，尤其是"昨天"、"今天"、"下周三"等模糊描述！！！
-
-# 提取规则
-## 核心要求
-1. 每个事实条目必须包含：角色标识（user/bot）+事实描述，如果事实和时间相关才需要携带时间，否则不用
-2. 时间优先参考每一条记忆携带的time，比如“you: 昨晚调试代码到凌晨三点，time:2025-04-07 10:14:07”，需要参考时间为2025-04-07 10:14:07
-3. 时间格式统一为YYYY-MM-DD（含时间段时使用YYYY-MM-DD HH:MM格式）
-
-## 时间处理策略
-**当前基准日期**：{datetime.now().strftime("%Y-%m-%d")}
-- 转换优先级：
-  1. 绝对时间（如"2025年4月2日"）→ 2025-04-02
-  2. 相对时间（如"下周三"）→ 根据记忆日期时间推算
-  3. 模糊时间（如"三个月后"）→ 推算具体日期
-  4. 时间段（如"下午三点到五点"）→ 15:00-17:00
-
-# 输出规范
-```json
-{{
-  "facts": [
-    "user:在 2025-04-02 准备去爬山",
-    "bot:在2025-04-02 建议用户多穿衣服" ,
-    "user:喜欢吃蛋糕"
-  ]
-}}
-"""
-
-QUERY_PROMPT=f"""
-请严格按以下步骤处理用户输入：
-1. **时间检测**：识别所有时间表达式（绝对/相对/模糊）
-2. **时间转换**：
-   - 绝对时间 → 转为ISO 8601格式（YYYY-MM-DD[THH:mm]）
-   - 相对时间 → 基于当前基准时间计算（当前：{datetime.now().strftime("%Y-%m-%d")}）
-   - 时间段 → 转为ISO区间格式（HH:mm-HH:mm）
-3. **语义保留**：保持原句结构，仅替换时间表达式
-4. 如果原句没有时间描述直接返回原句内容
-
-## 转换优先级
-1. 精确时间点（如"下午3点半" → 15:30）
-2. 日期范围（如"4-5月" → 2024-04-01~2024-05-31）
-3. 模糊时段（如"明年初" → 2025-Q1）
-
-直接返回转化完的字符串即可
-"""
 
 # 接收原始的多轮聊天记录，然后llm总结得到事实，事实向量化后存储到向量数据库
 # TODO:考虑之后改成并发操作，提高速度
