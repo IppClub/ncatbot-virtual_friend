@@ -31,9 +31,9 @@ silent_start = 1:00
 silent_end = 06:00     
 
 [RAG_memory]
-OPEN = true
+OPEN = false
 OLLAMA_BASE_URL =  http://127.0.0.1:11434
-QDRANT_HOST = 172.25.87.18
+QDRANT_HOST = 172.0.0.1
 QDRANT_PORT = 6333
 # 向量相似度阈值，用于判断是否需要进入更新判断
 SIMILARITY_THRESHOLD = 0.85 

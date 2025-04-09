@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 class virtual_friend(BasePlugin):
     name = "virtual_friend"  # 插件名称
-    version = "0.1.0"  # 插件版本
+    version = "1.0.0"  # 插件版本
 
     @bot.group_event() # 暂时不考虑开发群聊功能
     async def on_group_event(self, msg: GroupMessage):
