@@ -65,7 +65,7 @@ class virtual_friend(BasePlugin):
         config = configparser.ConfigParser()
         config.read(CONFIG_FILE_PATH,encoding="utf-8")
 
-        USER_ID = config.get("host", "USER_ID")
+        USER_ID = config.getint("host", "USER_ID")
 
         message_data = {'message_id': '284041315', 
                         'user_id': USER_ID, 
@@ -99,7 +99,7 @@ class virtual_friend(BasePlugin):
         min_reply_interval = int(config.get("active-send", "min_reply_interval"))
         silent_start = config.get("active-send", "silent_start")
         silent_end = config.get("active-send", "silent_end")
-        user_id = config.get("host", "USER_ID")
+        user_id = config.getint("host", "USER_ID")
 
         # 解析静默时间段的开始和结束时间
         silent_start_hour, silent_start_minute = map(int, silent_start.split(":"))
