@@ -33,7 +33,7 @@ def init_db():
                 user_id TEXT NOT NULL,
                 content TEXT NOT NULL,
                 role TEXT NOT NULL,  -- "user" 或 "bot"
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                timestamp TIMESTAMP DEFAULT datetime('now', 'localtime')
             )
         """)
 
@@ -41,7 +41,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS mid_memory (
                 user_id TEXT NOT NULL,
                 content TEXT NOT NULL UNIQUE,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                timestamp TIMESTAMP DEFAULT datetime('now', 'localtime')
             )
         """)
 
@@ -49,7 +49,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS long_memory (
                 user_id TEXT NOT NULL,
                 content TEXT NOT NULL UNIQUE,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                timestamp TIMESTAMP DEFAULT datetime('now', 'localtime')
             )
         """)
 
@@ -79,11 +79,13 @@ async def manage_temp_memory(user_id):
 
     else:
         logger.info(f"短期记忆条数为：{str(temp_count)},需要处理")
-        # 获取短期记忆拼接格式
-        temp_memory_last=get_temp_memory_string(user_id)
+        # 获取早期短期记忆，转化成字符串格式
+        temp_memory_last=get_temp_memory_last(user_id)
+
+        temp_memory_last_str="\n".join([f"{m['role']}: {m['content']},time:{'timestamp'}" for m in temp_memory_last])
         
         # 使用 check_temp_memory 来总结这些短期记忆
-        summary = await check_mid_memory(user_id, temp_memory_last)
+        summary = await check_mid_memory(user_id, temp_memory_last_str)
 
         logger.info( f"总结结果为：{summary}" )            
         if summary != "无重要内容":
@@ -91,7 +93,7 @@ async def manage_temp_memory(user_id):
             insert_mid_memory(user_id, summary)
         
         # 存入向量数据库
-        await store_memory(temp_memory_last, user_id)
+        await store_memory(temp_memory_last_str, user_id)
 
         # 清空短期记忆
         clear_temp_memory(user_id)
@@ -121,6 +123,27 @@ async def manage_mid_memory(user_id):
         clear_mid_memory(user_id)
     logger.info("中期记忆处理完成")
 
+# 管理长期记忆（当长期记忆过多的时候，自己总结重复存入）
+async def manage_long_memory(user_id):
+    logger.info(f"正在处理{user_id}长期记忆")
+    long_memory_data = get_long_memory_raw(user_id)
+    long_count = len(long_memory_data)
+
+    if long_count < 10:
+        # 如果长期记忆条数小于10，则不做处理，返回
+        logger.info (f"长期记忆条数为：{str(long_count)} 不需要处理")
+
+    else:
+        logger.info (f"长期记忆条数为：{str(long_count)} 需要处理")
+        formatted_content="\n".join([m['content'] for m in long_memory_data])
+        summary = await check_long_memory(user_id, formatted_content)
+
+        if summary != "无重要内容":
+            clear_long_memory(user_id)
+            insert_long_memory(user_id, summary)
+        else:
+            clear_long_memory(user_id)
+
 # 删除临时记忆（时间最早的一组）
 def clear_temp_memory(user_id):
     logger.info(f"删除{user_id}最早的临时记忆")
@@ -138,6 +161,17 @@ def clear_mid_memory(user_id):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM mid_memory WHERE timestamp IN ( SELECT timestamp FROM mid_memory WHERE user_id = ? ORDER BY timestamp LIMIT ?);", (user_id,MID_GROUP_SIZE-1))
+    conn.commit()
+    conn.close()
+
+
+# 删除用户所有的长期记忆
+def clear_long_memory(user_id):
+    logger.info(f"删除{user_id}的长期记忆")
+    """ 清空用户的长期记忆 """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM long_memory WHERE user_id = ?", (user_id,))
     conn.commit()
     conn.close()
 
@@ -215,9 +249,9 @@ def get_temp_memory(user_id):
     # 获取用户的临时记忆
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT content, role FROM temp_memory WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT content, role, timestamp FROM temp_memory WHERE user_id = ?", (user_id,))
     
-    memories = [{"content": row[0], "role": row[1]} for row in cursor.fetchall()]
+    memories = [{"content": row[0], "role": row[1], "timestamp": row[2]} for row in cursor.fetchall()]
     conn.close()
 
     if not memories:
@@ -234,10 +268,10 @@ def get_temp_memory_recent(user_id):
     # 获取用户的临时记忆
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT content, role FROM temp_memory WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?", (user_id,TEMP_GROUP_SIZE))
+    cursor.execute("SELECT content, role, timestamp FROM temp_memory WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?", (user_id, TEMP_GROUP_SIZE))
     
     # 使用 reversed 反转查询结果顺序（保持最新记录在前）
-    memories = [{"content": row[0], "role": row[1]} for row in reversed(cursor.fetchall())]
+    memories = [{"content": row[0], "role": row[1], "timestamp": row[2]} for row in reversed(cursor.fetchall())]
     conn.close()
 
     if not memories:
@@ -254,9 +288,9 @@ def get_temp_memory_last(user_id):
     # 获取用户的临时记忆
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT content, role FROM temp_memory WHERE user_id = ? ORDER BY timestamp ASC LIMIT ?", (user_id,TEMP_GROUP_SIZE))
+    cursor.execute("SELECT content, role,timestamp FROM temp_memory WHERE user_id = ? ORDER BY timestamp ASC LIMIT ?", (user_id,TEMP_GROUP_SIZE))
     
-    memories = [{"content": row[0], "role": row[1]} for row in cursor.fetchall()]
+    memories = [{"content": row[0], "role": row[1] ,"timestamp": row[2]} for row in cursor.fetchall()]
     conn.close()
 
     if not memories:
@@ -322,3 +356,19 @@ def get_long_memory(user_id):
     
     logger.info(f"拼接长期记忆内容：{long_memory_text}")
     return long_memory_text
+
+# 获取用户的全部长期记忆（原始格式）
+def get_long_memory_raw(user_id):
+    logger.info(f"正在获取用户 {user_id} 的全部长期记忆...")
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT content FROM long_memory WHERE user_id = ?", (user_id,))
+    memories = [row[0] for row in cursor.fetchall()]
+    conn.close()
+
+    if not memories:
+        logger.info(f"用户 {user_id} 没有长期记忆。")
+    else:
+        logger.info(f"获取到长期记忆：{memories}")
+    return memories

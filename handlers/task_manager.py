@@ -4,7 +4,7 @@ import configparser
 from ..ai_utils.ai_helper import ai_message
 from .user_state import USER_IMGS, USER_INPUTS, USER_TASKS,USER_TASKS_QUEUES,USER_TASKS_MANAGER
 from .user_state import USER_DATA_LOCK,USER_TASKS_MANAGER_LOCK,USER_TASKS_LOCK
-from ..memory.memory_manager import insert_temp_memory, manage_temp_memory, manage_mid_memory
+from ..memory.memory_manager import insert_temp_memory, manage_temp_memory, manage_mid_memory,manage_long_memory
 
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))  
@@ -80,6 +80,7 @@ async def core_send(final_message, url_list,api, character,user_id):
             await asyncio.sleep(1.5)  # 模拟打字间隔
     await manage_temp_memory(user_id)
     await manage_mid_memory(user_id)
+    await manage_long_memory(user_id)
 async def schedule_task(user_id, api, character):
     """ 取消旧任务并启动新任务 """
     async with USER_TASKS_LOCK:
