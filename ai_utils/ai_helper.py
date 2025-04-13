@@ -39,9 +39,21 @@ async def use_ai(prompt, content) -> str:
     )
     return response.choices[0].message.content
 
-async def use_ai_raw(prompt, content) -> str:
+# 使用reasoner模型
+async def use_ai_raw_reasoner(prompt, content) -> str:
     response = await client.chat.completions.create(
-        model="deepseek-chat",
+        model="deepseek-reasoner",
+        messages=[
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": content},
+        ],
+        stream=False
+    )
+    return response.choices[0].message.content
+
+async def use_ai_raw_chat(prompt, content) -> str:
+    response = await client.chat.completions.create(
+        model="deepseek-reasoner",
         messages=[
             {"role": "system", "content": prompt},
             {"role": "user", "content": content},
@@ -87,7 +99,7 @@ async def ai_message(user_input: str, url_list ,character="魈", user_id=None) -
         from ..RAG_memory.main import query_memory #  用于处理循环导入
         str_histoty_memory=""
         if OPEN == "true" and user_input!="":
-            history_memory= await query_memory("user:"+user_input, user_id)
+            history_memory= await query_memory("user:"+user_input, user_id,20)
             for his in history_memory:
                 str_histoty_memory+=his.payload.get("content")
                 str_histoty_memory+="\n"
@@ -110,7 +122,7 @@ async def ai_message(user_input: str, url_list ,character="魈", user_id=None) -
             + "可能有关的历史记忆有：" + str_histoty_memory + "\n\n" 
             + "现在的时间是：" + get_current_time() + "\n\n"
             + "请你结合对话和时间信息继续聊天，返回近似于人类聊天的多条消息，不要重复之前的对话"
-            + "保持自然节奏，回复中不要有除了文本以外的东西，比如说动作和语气的描述"
+            + "保持自然节奏，用括号保留语气和动作"
             + "每条最好不超过25字，每一条用'。'隔开，中间不要有额外的换行"
         )
 

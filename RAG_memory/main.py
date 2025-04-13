@@ -2,7 +2,7 @@ import configparser
 import os
 from .em_ollama import ollama_client
 from .qdrant import store_vector_in_qdrant,query_vector_in_qdrant,query_all_vectors_for_user,update_vector_in_qdrant,delete_all_vectors_for_user
-from ..ai_utils.ai_helper import use_ai_raw,use_ai_output_json
+from ..ai_utils.ai_helper import use_ai_raw_reasoner,use_ai_raw_chat
 from .prompt import CUSTOM_DUAL_FACT_PROMPT,QUERY_PROMPT
 
 from datetime import datetime
@@ -23,17 +23,19 @@ async def store_memory(messages, user_id):
         return
     # ai总结
     prompt=CUSTOM_DUAL_FACT_PROMPT
-    fact=await use_ai_output_json(prompt,messages)
+    fact=await use_ai_raw_reasoner(prompt,messages)
     print(f"ai总结得到的事实原始格式为：{fact}")
 
-    fact_list=fact["facts"]
+    # 把输出结果按"。"分割变成一个list
+    fact_list = [s for s in fact.split("。") if s]
+
     for f in fact_list:
         embedder_fact=ollama_client.get_embedding(f)
         # 找到最相符的一条数据（是否合理）
         similar_fact=query_vector_in_qdrant(embedder_fact,user_id=user_id,top_k=1)
         print(f"最相符的数据为：{similar_fact}")
-        if similar_fact==[] or similar_fact[0].score<SIMILARITY_THRESHOLD:
-            store_vector_in_qdrant(embedder_fact,f,user_id=user_id)
+        if not similar_fact or len(similar_fact) == 0 or similar_fact[0].score < SIMILARITY_THRESHOLD:
+            store_vector_in_qdrant(embedder_fact, f, user_id=user_id)
         
         else:
           prompt = f"""你是一个智能记忆管理系统，请判断用户的新记忆应该执行何种操作（ADD/UPDATE/NONE）：
@@ -48,7 +50,7 @@ async def store_memory(messages, user_id):
             新记忆：{f}
             """
           
-          action=await use_ai_raw(prompt,"")
+          action=await use_ai_raw_chat(prompt,"")
           print(f"ai决定的操作为：{action}")
 
           if(action=="ADD"):
@@ -60,14 +62,14 @@ async def store_memory(messages, user_id):
               pass
 
 # 使用一句话和用户id查询相关的向量数据库中数据
-async def query_memory(query, user_id):
+async def query_memory(query, user_id,number_of_results=5):
     # ai转换时间
     prompt=QUERY_PROMPT
-    query=await use_ai_raw(prompt,query)
+    query=await use_ai_raw_chat(prompt,query)
     print(f"ai转换的查询语句为：{query}")
     # 向量查询
     query_vector=ollama_client.get_embedding(query)
-    result=query_vector_in_qdrant(query_vector,user_id=user_id)
+    result=query_vector_in_qdrant(query_vector,user_id=user_id,top_k=number_of_results)
     return result
 
 # 查询某一个用户的所有数据
