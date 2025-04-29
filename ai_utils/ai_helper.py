@@ -35,7 +35,7 @@ async def use_ai(prompt, content) -> str:
         stream=False,
         frequency_penalty=1.0,
         presence_penalty=1,
-        temperature=1.3
+        temperature=0.3
     )
     return response.choices[0].message.content
 
@@ -53,7 +53,7 @@ async def use_ai_raw_reasoner(prompt, content) -> str:
 
 async def use_ai_raw_chat(prompt, content) -> str:
     response = await client.chat.completions.create(
-        model="deepseek-reasoner",
+        model="deepseek-chat",
         messages=[
             {"role": "system", "content": prompt},
             {"role": "user", "content": content},
@@ -120,9 +120,9 @@ async def ai_message(user_input: str, url_list ,character="魈", user_id=None) -
             + "最近的中期记忆: " + mid_term_memory + "\n\n" 
             + "长期记忆: " + long_term_memory + "\n\n"
             + "可能有关的历史记忆有：" + str_histoty_memory + "\n\n" 
-            + "现在的时间是：" + get_current_time() + "\n\n"
-            + "请你结合对话和时间信息继续聊天，返回近似于人类聊天的多条消息，不要重复之前的对话"
-            + "保持自然节奏，用括号保留语气和动作"
+            + "现在的时间是：" + get_current_time() + ",请你严格参考当前时间和所有记忆中的时间信息进行推理判断，判断事情的先后关系和合理性。" + "\n\n"
+            + "请你结合对话和时间信息继续聊天，返回近似于人类聊天的多条消息，内容合情合理，不要重复之前的对话，内容严格参考历史的记忆，请只引用用户最近明确提到的内容，不要编造未提到的历史"
+            + "保持自然节奏，用括号保留语气和动作，不要返回除了对话内容以外的信息，比如字数"
             + "每条最好不超过25字，每一条用'。'隔开，中间不要有额外的换行"
         )
 

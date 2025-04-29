@@ -135,7 +135,7 @@ async def manage_long_memory(user_id):
 
     else:
         logger.info (f"长期记忆条数为：{str(long_count)} 需要处理")
-        formatted_content="\n".join([m['content'] for m in long_memory_data])
+        formatted_content = "\n".join(long_memory_data)
         summary = await check_long_memory(user_id, formatted_content)
 
         if summary != "无重要内容":
