@@ -33,7 +33,7 @@ def init_db():
                 user_id TEXT NOT NULL,
                 content TEXT NOT NULL,
                 role TEXT NOT NULL,  -- "user" 或 "bot"
-                timestamp TIMESTAMP DEFAULT datetime('now', 'localtime')
+                timestamp TIMESTAMP DEFAULT (datetime('now', 'localtime'))
             )
         """)
 
@@ -41,7 +41,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS mid_memory (
                 user_id TEXT NOT NULL,
                 content TEXT NOT NULL UNIQUE,
-                timestamp TIMESTAMP DEFAULT datetime('now', 'localtime')
+                timestamp TIMESTAMP DEFAULT (datetime('now', 'localtime'))
             )
         """)
 
@@ -49,7 +49,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS long_memory (
                 user_id TEXT NOT NULL,
                 content TEXT NOT NULL UNIQUE,
-                timestamp TIMESTAMP DEFAULT datetime('now', 'localtime')
+                timestamp TIMESTAMP DEFAULT (datetime('now', 'localtime'))
             )
         """)
 
