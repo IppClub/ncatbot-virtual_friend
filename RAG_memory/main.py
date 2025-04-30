@@ -1,7 +1,7 @@
 import configparser
 import os
-from .em_ollama import ollama_client
-from .qdrant import store_vector_in_qdrant,query_vector_in_qdrant,query_all_vectors_for_user,update_vector_in_qdrant,delete_all_vectors_for_user
+from .em_doubao import em_client
+from .qdrant_for_doubao import store_vector_in_qdrant,query_vector_in_qdrant,query_all_vectors_for_user,update_vector_in_qdrant,delete_all_vectors_for_user
 from ..ai_utils.ai_helper import use_ai_raw_reasoner,use_ai_raw_chat
 from .prompt import CUSTOM_DUAL_FACT_PROMPT,QUERY_PROMPT
 
@@ -30,7 +30,7 @@ async def store_memory(messages, user_id):
     fact_list = [s for s in fact.split("。") if s]
 
     for f in fact_list:
-        embedder_fact=ollama_client.get_embedding(f)
+        embedder_fact=em_client.get_embedding(f)
         # 找到最相符的一条数据（是否合理）
         similar_fact=query_vector_in_qdrant(embedder_fact,user_id=user_id,top_k=1)
         print(f"最相符的数据为：{similar_fact}")
@@ -68,7 +68,7 @@ async def query_memory(query, user_id,number_of_results=5):
     query=await use_ai_raw_chat(prompt,query)
     print(f"ai转换的查询语句为：{query}")
     # 向量查询
-    query_vector=ollama_client.get_embedding(query)
+    query_vector=em_client.get_embedding(query)
     result=query_vector_in_qdrant(query_vector,user_id=user_id,top_k=number_of_results)
     return result
 

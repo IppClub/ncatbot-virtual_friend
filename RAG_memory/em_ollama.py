@@ -53,3 +53,5 @@ OLLAMA_BASE_URL = config.get("RAG_memory", "OLLAMA_BASE_URL")
 
 # 创建 Ollama 客户端
 ollama_client = OllamaClient(OLLAMA_BASE_URL)
+
+em_client=ollama_client
