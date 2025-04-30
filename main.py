@@ -65,30 +65,32 @@ class virtual_friend(BasePlugin):
         config = configparser.ConfigParser()
         config.read(CONFIG_FILE_PATH,encoding="utf-8")
 
-        USER_ID = config.getint("host", "USER_ID")
+        user_id_str = config.get("host", "USER_ID")
+        user_ids = [int(uid.strip()) for uid in user_id_str.split(",") if uid.strip().isdigit()]  # ✅ 修改点
 
-        message_data = {'message_id': '284041315', 
-                        'user_id': USER_ID, 
-                        'message_seq': '284041315', 
-                        'real_id': '284041315', 
-                        'message_type': 'private', 
-                        "sender": {"user_id": USER_ID, "nickname": "夜愿", "card": ""},
-                        'raw_message': '', 
-                        'font': '14', 
-                        'sub_type': 'friend', 
-                        "message": json.loads('[{"type": "text", "data": {"text": ""}}]'),  # 这里改为列表 
-                        'message_format': 'array', 
-                        'target_id': USER_ID}
-        private_msg = PrivateMessage(message_data)
-        await handle_private_message(private_msg, self.api)
+        for  USER_ID in user_ids:
+            message_data = {'message_id': '284041315', 
+                            'user_id': USER_ID, 
+                            'message_seq': '284041315', 
+                            'real_id': '284041315', 
+                            'message_type': 'private', 
+                            "sender": {"user_id": USER_ID, "nickname": "夜愿", "card": ""},
+                            'raw_message': '', 
+                            'font': '14', 
+                            'sub_type': 'friend', 
+                            "message": json.loads('[{"type": "text", "data": {"text": ""}}]'),  # 这里改为列表 
+                            'message_format': 'array', 
+                            'target_id': USER_ID}
+            private_msg = PrivateMessage(message_data)
+            await handle_private_message(private_msg, self.api)
 
-        # 试验功能：定时任务发送消息
-        # 启动后台定时任务
-        asyncio.create_task(self.start_sending_messages())
+            # 试验功能：定时任务发送消息
+            # 启动后台定时任务
+            asyncio.create_task(self.start_sending_messages(USER_ID))
     
     # 随机时间间隔发送消息
     # TODO: 现在是后台进程死循环，是否会影响性能？
-    async def start_sending_messages(self):
+    async def start_sending_messages(self,user_id):
         # 从配置文件读取参数
         BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))  
         CONFIG_FILE_PATH = os.path.join(BASE_DIR, "settings.ini")
@@ -99,7 +101,6 @@ class virtual_friend(BasePlugin):
         min_reply_interval = int(config.get("active-send", "min_reply_interval"))
         silent_start = config.get("active-send", "silent_start")
         silent_end = config.get("active-send", "silent_end")
-        user_id = config.getint("host", "USER_ID")
 
         # 解析静默时间段的开始和结束时间
         silent_start_hour, silent_start_minute = map(int, silent_start.split(":"))
