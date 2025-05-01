@@ -11,7 +11,6 @@ class DoubaoClient:
 
     def get_embedding(self, text):
         # 请求 Volcengine API 获取嵌入向量
-        print("----- multimodal embeddings request -----")
         resp = self.client.multimodal_embeddings.create(
             model="doubao-embedding-vision-241215",
             encoding_format="float",
@@ -21,6 +20,7 @@ class DoubaoClient:
         if hasattr(resp, "data") and resp.data:
             # 获取嵌入向量数据
             embedding = resp.data["embedding"]
+            print("豆包正确返回向量")
             return embedding  # 假设返回第一个嵌入向量
         else:
             print("错误：未接收到嵌入数据")
